@@ -1,15 +1,17 @@
 services:
     - type: web
       runtime: 'node'
-      repo: https://github.com/cinepro-org/core
+      repo: https://github.com/simoabid/cineflix-core
       name: cinepro-core
       plan: free
-      autoDeploy: false
+      autoDeploy: true
       numInstances: 1
       buildCommand: npm install && npm run build
       startCommand: npm run start
 
       envVars:
+          - key: HOST
+            value: '0.0.0.0'
           - key: NODE_ENV
             value: 'production'
           - key: CACHE_TYPE
