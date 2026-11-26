@@ -1,7 +1,7 @@
 services:
     - type: web
       runtime: 'node'
-      repo: https://github.com/simoabid/cineflix-core
+      repo: https://github.com/xSakshamx/cineflix-core
       name: cinepro-core
       plan: free
       autoDeploy: true
