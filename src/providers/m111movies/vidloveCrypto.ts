@@ -1,3 +1,8 @@
+
+function asBufferSource(bytes: Uint8Array): ArrayBuffer {
+    return Uint8Array.from(bytes).buffer;
+}
+
 /**
  * Vidlove / momlover response crypto (player.vidlove.cc SPA, 2026-07).
  *
@@ -55,7 +60,7 @@ async function pbkdf2(
 ): Promise<Uint8Array> {
     const keyMat = await crypto.subtle.importKey(
         'raw',
-        new TextEncoder().encode(pass),
+        asBufferSource(new TextEncoder().encode(pass)),
         { name: 'PBKDF2' },
         false,
         ['deriveKey']
@@ -63,7 +68,7 @@ async function pbkdf2(
     const derived = await crypto.subtle.deriveKey(
         {
             name: 'PBKDF2',
-            salt: new TextEncoder().encode(salt),
+            salt: asBufferSource(new TextEncoder().encode(salt)),
             iterations,
             hash
         },
@@ -91,20 +96,20 @@ export async function decryptResponseGcm(
 
     const material = concatBytes(new TextEncoder().encode(key), salt);
     const derived = new Uint8Array(
-        await crypto.subtle.digest('SHA-256', material)
+        await crypto.subtle.digest('SHA-256', asBufferSource(material))
     );
     const cryptoKey = await crypto.subtle.importKey(
         'raw',
-        derived,
+        asBufferSource(derived),
         { name: 'AES-GCM' },
         false,
         ['decrypt']
     );
     const data = concatBytes(ciphertext, tag);
     const plain = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv, tagLength: 128 },
+        { name: 'AES-GCM', iv: asBufferSource(iv), tagLength: 128 },
         cryptoKey,
-        data
+        asBufferSource(data)
     );
     const text = new TextDecoder().decode(plain);
     try {
@@ -138,15 +143,15 @@ async function layer3Aes(data: string): Promise<string> {
     const keyBytes = await pbkdf2(L3_SECRET, salt, 100_000, 32, 'SHA-512');
     const aesKey = await crypto.subtle.importKey(
         'raw',
-        keyBytes,
+        asBufferSource(keyBytes),
         { name: 'AES-CBC' },
         false,
         ['decrypt']
     );
     const decrypted = await crypto.subtle.decrypt(
-        { name: 'AES-CBC', iv: base64ToBytes(ivB64) },
+        { name: 'AES-CBC', iv: asBufferSource(base64ToBytes(ivB64)) },
         aesKey,
-        base64ToBytes(ctB64)
+        asBufferSource(base64ToBytes(ctB64))
     );
     return new TextDecoder().decode(decrypted);
 }

@@ -1,5 +1,10 @@
 import CryptoJS from 'crypto-js';
 
+
+function asBufferSource(bytes: Uint8Array): ArrayBuffer {
+    return Uint8Array.from(bytes).buffer;
+}
+
 // ---------------------------------------------------------------------------
 // WebCrypto helpers (AES-CBC)
 // ---------------------------------------------------------------------------
@@ -16,15 +21,15 @@ export async function aesCbcEncrypt(
     const enc = new TextEncoder();
     const cryptoKey = await crypto.subtle.importKey(
         'raw',
-        enc.encode(key),
+        asBufferSource(enc.encode(key)),
         { name: 'AES-CBC' },
         false,
         ['encrypt']
     );
     const encrypted = await crypto.subtle.encrypt(
-        { name: 'AES-CBC', iv: enc.encode(iv) },
+        { name: 'AES-CBC', iv: asBufferSource(enc.encode(iv)) },
         cryptoKey,
-        enc.encode(data)
+        asBufferSource(enc.encode(data))
     );
     return bufferToBase64(encrypted);
 }
@@ -43,15 +48,15 @@ export async function aesCbcDecrypt(
         const enc = new TextEncoder();
         const cryptoKey = await crypto.subtle.importKey(
             'raw',
-            enc.encode(key),
+            asBufferSource(enc.encode(key)),
             { name: 'AES-CBC' },
             false,
             ['decrypt']
         );
         const decrypted = await crypto.subtle.decrypt(
-            { name: 'AES-CBC', iv: enc.encode(iv) },
+            { name: 'AES-CBC', iv: asBufferSource(enc.encode(iv)) },
             cryptoKey,
-            base64ToBuffer(encrypted)
+            asBufferSource(new Uint8Array(base64ToBuffer(encrypted)))
         );
         return new TextDecoder().decode(decrypted);
     } catch {
@@ -77,7 +82,7 @@ export async function aesGcmDecrypt(
         const keyBytes = base64ToBuffer(keyBase64);
         const cryptoKey = await crypto.subtle.importKey(
             'raw',
-            keyBytes,
+            asBufferSource(keyBytes),
             { name: 'AES-GCM' },
             false,
             ['decrypt']
@@ -99,7 +104,7 @@ export async function aesGcmDecrypt(
         const decrypted = await crypto.subtle.decrypt(
             { name: 'AES-GCM', iv },
             cryptoKey,
-            combined
+            asBufferSource(combined)
         );
         return new TextDecoder().decode(decrypted);
     } catch {
@@ -120,15 +125,15 @@ export async function aesGcmDecryptWithIv(
     try {
         const cryptoKey = await crypto.subtle.importKey(
             'raw',
-            key,
+            asBufferSource(key),
             { name: 'AES-GCM' },
             false,
             ['decrypt']
         );
         const decrypted = await crypto.subtle.decrypt(
-            { name: 'AES-GCM', iv },
+            { name: 'AES-GCM', iv: asBufferSource(iv) },
             cryptoKey,
-            ciphertext
+            asBufferSource(ciphertext)
         );
         return new TextDecoder().decode(decrypted);
     } catch {
